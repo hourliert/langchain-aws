@@ -481,7 +481,7 @@ class BedrockBase(BaseLanguageModel, ABC):
 
     provider: Optional[str] = None
     """The model provider, e.g., amazon, cohere, ai21, etc. When not supplied, provider
-    is extracted from the first part of the model_id e.g. 'amazon' in 
+    is extracted from the first part of the model_id e.g. 'amazon' in
     'amazon.titan-text-express-v1'. This value should be provided for model ids that do
     not have the provider in them, e.g., custom and provisioned models that have an ARN
     associated with them."""
@@ -870,6 +870,18 @@ class BedrockBase(BaseLanguageModel, ABC):
             if not isinstance(chunk, AIMessageChunk):
                 self._get_bedrock_services_signal(chunk.generation_info)  # type: ignore[arg-type]
 
+            if run_manager is not None:
+                token = None
+
+                if isinstance(chunk, GenerationChunk):
+                    token = chunk.text
+                elif isinstance(chunk, AIMessageChunk):
+                    token = chunk.content
+
+                if token:
+                    run_manager.on_llm_new_token(token, chunk=chunk)
+
+
     async def _aprepare_input_and_invoke_stream(
         self,
         prompt: str,
@@ -930,6 +942,21 @@ class BedrockBase(BaseLanguageModel, ABC):
             True if messages else False,
         ):
             yield chunk
+
+            token = None
+
+            if isinstance(chunk, GenerationChunk):
+                token = chunk.text
+            elif isinstance(chunk, AIMessageChunk):
+                token = chunk.content
+
+            if run_manager is not None and asyncio.iscoroutinefunction(
+                run_manager.on_llm_new_token
+            ):
+                await run_manager.on_llm_new_token(token, chunk=chunk)
+            elif run_manager is not None:
+                run_manager.on_llm_new_token(token, chunk=chunk)  # type: ignore[unused-coroutine]
+
 
 
 class BedrockLLM(LLM, BedrockBase):
