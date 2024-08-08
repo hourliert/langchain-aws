@@ -368,7 +368,11 @@ class LLMInputOutputAdapter:
             )
 
         for event in stream:
+            print(event)
+            ## LAST = {'chunk': {'bytes': b'{"type":"message_stop","amazon-bedrock-invocationMetrics":{"inputTokenCount":12,"outputTokenCount":63,"invocationLatency":6134,"firstByteLatency":356}}'}}
+
             chunk = event.get("chunk")
+
             if not chunk:
                 continue
 
@@ -481,7 +485,7 @@ class BedrockBase(BaseLanguageModel, ABC):
 
     provider: Optional[str] = None
     """The model provider, e.g., amazon, cohere, ai21, etc. When not supplied, provider
-    is extracted from the first part of the model_id e.g. 'amazon' in 
+    is extracted from the first part of the model_id e.g. 'amazon' in
     'amazon.titan-text-express-v1'. This value should be provided for model ids that do
     not have the provider in them, e.g., custom and provisioned models that have an ARN
     associated with them."""
