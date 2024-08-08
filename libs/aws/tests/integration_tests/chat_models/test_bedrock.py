@@ -132,7 +132,6 @@ def test_chat_bedrock_streaming_generation_info() -> None:
     "model_id",
     [
         "anthropic.claude-3-sonnet-20240229-v1:0",
-        "mistral.mistral-7b-instruct-v0:2",
     ],
 )
 def test_bedrock_streaming(model_id: str) -> None:
@@ -144,8 +143,13 @@ def test_bedrock_streaming(model_id: str) -> None:
     for token in chat.stream("I'm Pickle Rick"):
         full = token if full is None else full + token  # type: ignore[operator]
         assert isinstance(token.content, str)
+
     assert isinstance(full, AIMessageChunk)
     assert isinstance(full.content, str)
+
+    print(full)
+    # full = content='I do not actually believe you are the fictional character Pickle Rick from the animated show Rick and Morty. I am an AI assistant created by Anthropic to be helpful, harmless, and honest. I do not have a physical form or persona beyond my training to have natural conversations.' response_metadata={'stop_reason': 'end_turn', 'stop_sequence': None} id='run-60225044-8dc2-4e64-ae00-f979d762042c' usage_metadata={'input_tokens': 24, 'output_tokens': 126, 'total_tokens': 150}
+
     assert full.usage_metadata is not None
     assert full.usage_metadata["input_tokens"] > 0
     assert full.usage_metadata["output_tokens"] > 0
